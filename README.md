@@ -11,4 +11,4 @@ Results for algorithms including Saubel's neural network are presented in this t
 | Saubel       | 95.0%                 | 3.4%                   | 1.6%                  | 42.7%                  | 53.0%                   | 4.3%                   |
 | Probalistic  | 97.8%                 | 2.16%                  | 0.0%                  | 62.85%                 | 21.92%                  | 15.23%                 |
 
-Propabilistic algorithm is great at winning games but have problems with forcing a draw while playing second. Saubel's network have lesser chances of winning which can be explained by using inconsistend training data leading to troubled convergence and quite high loss.
+Propabilistic algorithm is great at winning games but have problems forcing a draw while playing second. Saubel's network have lesser chances of winning which can be explained by using inconsistend training data leading to troubled convergence and quite high loss but still forces more draws while playing second.
