@@ -1,6 +1,6 @@
 # tic-tac-toe
 
-Neural network for playing tic-tac-tie. Inspired by Daniel Saubel [article](https://medium.com/swlh/tic-tac-toe-and-deep-neural-networks-ea600bc53f51) and [repository](https://github.com/djsauble/tic-tac-toe-ai) but using completely different approach. 
+Algorithms for playing tic-tac-tie. Inspired by Daniel Saubel [article](https://medium.com/swlh/tic-tac-toe-and-deep-neural-networks-ea600bc53f51) and [repository](https://github.com/djsauble/tic-tac-toe-ai) but using variety of approaches.
 
 ## Results
 
