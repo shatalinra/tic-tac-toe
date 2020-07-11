@@ -1,4 +1,4 @@
-class board:
+class Board:
     def __init__(self):
         # each cell on 3x3 board can be taken by one of the players
         # 0 means empty cell
