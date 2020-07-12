@@ -6,11 +6,10 @@ import torch.utils.data
 import board
 import game
 import players
-from players import dumb, probabilistic, dense_autoencoder 
+from players import dumb, probabilistic, dense_autoencoder, sparse_autoencoder
 
 def print_autoencoder_metrics(title, autoencoder):
-    print(title)
-    print("\tRandom moves:", 100 * autoencoder.random_moves_ratio(), "%\n")
+    print(title, "random moves:", 100 * autoencoder.random_moves_ratio(), "%\n")
 
 def run_games(count, player1, player1_name, player2, player2_name):
     player1_won = 0
@@ -50,6 +49,24 @@ player1 = players.dumb.Player()
 player2 = players.dumb.Player()
 dumb_games = run_games(10000, player1, "dumb1", player2, "dumb2")
 
+# loading/training sparse autoencoder player
+sparse_autoencoder_player = players.sparse_autoencoder.Player()
+try:
+    sparse_autoencoder_player.load("models/sparse_autoencoder.pt")
+except FileNotFoundError:
+    sparse_autoencoder_player.train(dumb_games, "models/sparse_autoencoder.pt")
+
+# testing
+run_games(1000, sparse_autoencoder_player, "sparse autoencoder", player2, "dumb")
+print_autoencoder_metrics("sparse autoencoder", sparse_autoencoder_player)
+sparse_autoencoder_player.reset_metrics()
+
+run_games(1000, player1, "dumb", sparse_autoencoder_player, "sparse autoencoder")
+print_autoencoder_metrics("sparse autoencoder", sparse_autoencoder_player)
+sparse_autoencoder_player.reset_metrics()
+
+#exit(0)
+
 # loading/training probabilistic player
 probabilistic_player = players.probabilistic.Player()
 try:
@@ -76,3 +93,4 @@ dense_autoencoder_player.reset_metrics()
 run_games(1000, player1, "dumb", dense_autoencoder_player, "dense autoencoder")
 print_autoencoder_metrics("dense autoencoder", dense_autoencoder_player)
 dense_autoencoder_player.reset_metrics()
+
