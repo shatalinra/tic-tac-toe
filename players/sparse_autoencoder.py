@@ -9,10 +9,15 @@ class SparseAutoencoder(torch.nn.Module):
     def __init__(self):
         super(SparseAutoencoder, self).__init__()
 
-        # there are 8 meaningul line combinations, output would be around 10*3*8 = 240
-        self.encoder_conv = torch.nn.Conv1d(1, 8, 9, 9)
+        # there are 8 meaningul line combinations, output would be 8 channels x 30 values
+        self.encoder_conv1 = torch.nn.Conv1d(1, 8, 9, 9)
+        self.encoder_conv1_activation = torch.nn.Tanh()
+        # analyze values across empty, cross and naught arrays
+        self.encoder_conv2 = torch.nn.Conv1d(8, 16, 3, 3)
+        self.encoder_conv2_activation = torch.nn.Tanh()
+
         #self.encoder_conv_activation = torch.nn.Tanh()
-        #$self.encoder_linear1 = torch.nn.Linear(242, 212)
+        #self.encoder_linear1 = torch.nn.Linear(242, 212)
         #self.encoder_linear1_activation = torch.nn.Tanh()
         #self.encoder_linear2 = torch.nn.Linear(128, 64)
         #self.encoder_linear3 = torch.nn.Linear(64, 32)
@@ -31,14 +36,16 @@ class SparseAutoencoder(torch.nn.Module):
         # 1. each input channel undergoes transposed convolution which is described on tons of sites and books
         # 2. results for each channels are summed together including bias and pushed to output
         # 3. if you have multiple output channels they just use different set of kernels and produce different output values
-        self.decoder_conv = torch.nn.ConvTranspose1d(8, 1, 9, 9)
+        self.decoder_conv1 = torch.nn.ConvTranspose1d(16, 8, 3, 3)
+        self.decoder_conv1_activation = torch.nn.Tanh()
+        self.decoder_conv2 = torch.nn.ConvTranspose1d(8, 1, 9, 9)
         # output should be binary, so using sigmoid would help
-        self.decover_conv_activation = torch.nn.Sigmoid()
+        self.decover_conv_activation2 = torch.nn.Sigmoid()
 
         # input feature consists from 2 metadata values and 10*3*9=270 state values
         self._metadata_index = torch.tensor(range(0, 2))
         self._states_index = torch.tensor(range(2, 272))
-        self._state_codes_index = torch.tensor(range(2, 242))
+        self._state_codes_index = torch.tensor(range(2, 162))
 
     def _apply(self, fn):
         super(SparseAutoencoder, self)._apply(fn)
@@ -53,13 +60,15 @@ class SparseAutoencoder(torch.nn.Module):
         states = data_view.index_select(1, self._states_index)
 
         view = states.view(-1,1,270)
-        state_features = self.encoder_conv(view)
-        #state_features = self.encoder_conv_activation(state_features)
-        view = state_features.view(-1,240)
-        
+        x = self.encoder_conv1(view)
+        x = self.encoder_conv1_activation(x)
+        x = self.encoder_conv2(x)
+        x = self.encoder_conv2_activation(x)
+        view = x.view(-1,160)
+
         x = torch.cat((metadata, view), 1)
         #x = self.encoder_linear1(x)
-        #x = self.encoder_linear1_activation(x)
+        # = self.encoder_linear1_activation(x)
         #x = self.encoder_linear2(x).clamp(min=0)
         #x = self.encoder_linear3(x).clamp(min=0)
         #x = self.encoder_linear4(x).clamp(min=0)
@@ -72,12 +81,14 @@ class SparseAutoencoder(torch.nn.Module):
         #x = self.decoder_linear5_activation(x)
 
         out_metadata = x.index_select(1, self._metadata_index)
-        state_codes = x.index_select(1, self._state_codes_index)
+        x = x.index_select(1, self._state_codes_index)
 
-        view = state_codes.view(-1,8,30)
-        out_states = self.decoder_conv(view)
-        out_states = self.decover_conv_activation(out_states)
-        view = out_states.view(-1,270)
+        view = x.view(-1,16,10)
+        x = self.decoder_conv1(view)
+        x = self.decoder_conv1_activation(x)
+        x = self.decoder_conv2(x)
+        x = self.decover_conv_activation2(x)
+        view = x.view(-1,270)
 
         return torch.cat((out_metadata, view), 1)
 
@@ -115,10 +126,9 @@ class Player:
         #batch_size = 200
 
         loss_fn = torch.nn.MSELoss()
-        optimizer = torch.optim.RMSprop(model.parameters())
+        optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.005)
         print("\nTraining using", training_device, "on", training_data_size, "games")
         for t in range(10000):
-
             # shuffle data between epochs
             if batch_size != training_data_size:
                 permutation = torch.randperm(training_data.size()[0]).to(training_device)
@@ -149,14 +159,16 @@ class Player:
 
             # Check model perfomance
             if t % 100 == 0:
-                #output_games = model(training_data)
-                #training_loss = loss_fn(output_games, training_data)
-
                 output_games = model(testing_data)
                 validation_loss = loss_fn(output_games, testing_data)
 
-                #print("Epoch", t,"training_loss", training_loss.item(), "validation_loss", validation_loss.item())
-                print("Epoch", t, "validation loss", validation_loss.item())
+                if batch_size != training_data_size:
+                    output_games = model(training_data)
+                    training_loss = loss_fn(output_games, training_data)
+                    print("Epoch", t,"training loss", training_loss.item(), "validation loss", validation_loss.item())
+
+                else:
+                    print("Epoch", t, "validation loss", validation_loss.item())
 
         # output how much games are actually reconstructed right
         move_errors = 0

@@ -65,7 +65,7 @@ run_games(1000, player1, "dumb", sparse_autoencoder_player, "sparse autoencoder"
 print_autoencoder_metrics("sparse autoencoder", sparse_autoencoder_player)
 sparse_autoencoder_player.reset_metrics()
 
-#exit(0)
+exit(0)
 
 # loading/training probabilistic player
 probabilistic_player = players.probabilistic.Player()
