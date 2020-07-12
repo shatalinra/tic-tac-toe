@@ -15,6 +15,9 @@ class SparseAutoencoder(torch.nn.Module):
         # analyze values across empty, cross and naught arrays
         self.encoder_conv2 = torch.nn.Conv1d(8, 16, 3, 3)
         self.encoder_conv2_activation = torch.nn.Tanh()
+        # analyze valus across turns
+        self.encoder_conv3 = torch.nn.Conv1d(16, 80, 10, 10)
+        self.encoder_conv3_activation = torch.nn.Tanh()
 
         #self.encoder_conv_activation = torch.nn.Tanh()
         #self.encoder_linear1 = torch.nn.Linear(242, 212)
@@ -36,16 +39,18 @@ class SparseAutoencoder(torch.nn.Module):
         # 1. each input channel undergoes transposed convolution which is described on tons of sites and books
         # 2. results for each channels are summed together including bias and pushed to output
         # 3. if you have multiple output channels they just use different set of kernels and produce different output values
-        self.decoder_conv1 = torch.nn.ConvTranspose1d(16, 8, 3, 3)
+        self.decoder_conv1 = torch.nn.ConvTranspose1d(80, 16, 10, 10)
         self.decoder_conv1_activation = torch.nn.Tanh()
-        self.decoder_conv2 = torch.nn.ConvTranspose1d(8, 1, 9, 9)
+        self.decoder_conv2 = torch.nn.ConvTranspose1d(16, 8, 3, 3)
+        self.decoder_conv2_activation = torch.nn.Tanh()
+        self.decoder_conv3 = torch.nn.ConvTranspose1d(8, 1, 9, 9)
         # output should be binary, so using sigmoid would help
-        self.decover_conv_activation2 = torch.nn.Sigmoid()
+        self.decover_conv3_activation = torch.nn.Sigmoid()
 
         # input feature consists from 2 metadata values and 10*3*9=270 state values
         self._metadata_index = torch.tensor(range(0, 2))
-        self._states_index = torch.tensor(range(2, 272))
-        self._state_codes_index = torch.tensor(range(2, 162))
+        self._states_index = torch.tensor(range(2, 2 + 270))
+        self._state_codes_index = torch.tensor(range(2, 80 + 2))
 
     def _apply(self, fn):
         super(SparseAutoencoder, self)._apply(fn)
@@ -64,7 +69,9 @@ class SparseAutoencoder(torch.nn.Module):
         x = self.encoder_conv1_activation(x)
         x = self.encoder_conv2(x)
         x = self.encoder_conv2_activation(x)
-        view = x.view(-1,160)
+        x = self.encoder_conv3(x)
+        x = self.encoder_conv3_activation(x)
+        view = x.view(-1,80)
 
         x = torch.cat((metadata, view), 1)
         #x = self.encoder_linear1(x)
@@ -83,11 +90,13 @@ class SparseAutoencoder(torch.nn.Module):
         out_metadata = x.index_select(1, self._metadata_index)
         x = x.index_select(1, self._state_codes_index)
 
-        view = x.view(-1,16,10)
+        view = x.view(-1,80,1)
         x = self.decoder_conv1(view)
         x = self.decoder_conv1_activation(x)
         x = self.decoder_conv2(x)
-        x = self.decover_conv_activation2(x)
+        x = self.decoder_conv2_activation(x)
+        x = self.decoder_conv3(x)
+        x = self.decover_conv3_activation(x)
         view = x.view(-1,270)
 
         return torch.cat((out_metadata, view), 1)
@@ -115,6 +124,7 @@ class Player:
         # tried ReLU but model is shallow, so tanh adds more non-linearity and decreases loss
 
         training_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        #training_device = torch.device("cpu")
         model = SparseAutoencoder().to(training_device)
         data = [game.sparse_feature() for game in games]
 
@@ -126,9 +136,9 @@ class Player:
         #batch_size = 200
 
         loss_fn = torch.nn.MSELoss()
-        optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.005)
+        optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.002)
         print("\nTraining using", training_device, "on", training_data_size, "games")
-        for t in range(10000):
+        for t in range(20000):
             # shuffle data between epochs
             if batch_size != training_data_size:
                 permutation = torch.randperm(training_data.size()[0]).to(training_device)
