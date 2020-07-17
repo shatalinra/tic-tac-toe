@@ -49,6 +49,11 @@ player1 = players.dumb.Player()
 player2 = players.dumb.Player()
 dumb_games = run_games(10000, player1, "dumb1", player2, "dumb2")
 
+# create additional data by adding equivalent games
+original_games_count = len(dumb_games)
+for i in range(original_games_count):
+    dumb_games += dumb_games[i].equivalent_games()
+
 # loading/training sparse autoencoder player
 sparse_autoencoder_player = players.sparse_autoencoder.Player()
 try:

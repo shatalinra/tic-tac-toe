@@ -38,6 +38,24 @@ class GameHistory:
             game_recap.append(simulation_board.state())
         return game_recap
 
+    def equivalent_games(self):
+        # due to rotation and reflection invariance there is 6 addinational equivalent games 
+        rotated90_moves = [(j, 2 - i) for (i, j) in self._moves]
+        rotated180_moves = [(2 - i, 2 - j) for (i, j) in self._moves]
+        rotated270_moves = [(2 - j, i) for (i, j) in self._moves]
+        horizontal_reflection_moves = [(i, 2 - j) for (i, j) in self._moves]
+        vertical_reflection_moves = [(2 - i, j) for (i, j) in self._moves]
+        transposed_moves =  [(j, i) for (i, j) in self._moves]
+        all_moves = [rotated90_moves, rotated180_moves, rotated270_moves, horizontal_reflection_moves, 
+                     vertical_reflection_moves, transposed_moves]
+        
+        # construct games based on moves
+        out = [GameHistory(), GameHistory(), GameHistory(), GameHistory(), GameHistory(), GameHistory()]
+        for i, moves in enumerate(all_moves):
+            out[i]._moves = moves
+            out[i]._outcome = self._outcome
+        return out
+
     # dense feature which makes it impossible for network to break the rules
     # feature would have fixed size of 10 pretending game always contains 9 turns
     # if cell was not taken it would be treated as taken on some random turn

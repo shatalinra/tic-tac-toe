@@ -44,8 +44,6 @@ class SparseAutoencoder(torch.nn.Module):
         self.decoder_conv2 = torch.nn.ConvTranspose1d(16, 8, 3, 3)
         self.decoder_conv2_activation = torch.nn.Tanh()
         self.decoder_conv3 = torch.nn.ConvTranspose1d(8, 1, 9, 9)
-        # output should be binary, so using sigmoid would help
-        self.decover_conv3_activation = torch.nn.Sigmoid()
 
         # input feature consists from 2 metadata values and 10*3*9=270 state values
         self._metadata_index = torch.tensor(range(0, 2))
@@ -96,7 +94,6 @@ class SparseAutoencoder(torch.nn.Module):
         x = self.decoder_conv2(x)
         x = self.decoder_conv2_activation(x)
         x = self.decoder_conv3(x)
-        x = self.decover_conv3_activation(x)
         view = x.view(-1,270)
 
         return torch.cat((out_metadata, view), 1)
@@ -121,8 +118,6 @@ class Player:
         self._model = model
 
     def train(self, games, save_path):
-        # tried ReLU but model is shallow, so tanh adds more non-linearity and decreases loss
-
         training_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         #training_device = torch.device("cpu")
         model = SparseAutoencoder().to(training_device)
@@ -133,9 +128,9 @@ class Player:
         training_data = torch.tensor(data[:training_data_size]).float().to(training_device)
         testing_data = torch.tensor(data[training_data_size:]).float().to(training_device)
         batch_size = training_data_size
-        #batch_size = 200
+        #batch_size = 4000
 
-        loss_fn = torch.nn.MSELoss()
+        loss_fn = torch.nn.BCEWithLogitsLoss()
         optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.002)
         print("\nTraining using", training_device, "on", training_data_size, "games")
         for t in range(20000):
