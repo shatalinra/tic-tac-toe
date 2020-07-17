@@ -10,6 +10,8 @@ Algorithms for playing tic-tac-tie. Inspired by Daniel Saubel [article](https://
 
 **Dense autoencoder**: neural network trained to reconstruct game history described by dense feature - outcome and number of turn on which each cell was taken. Such representation itself does not allow overtaking cell or making multiple moves by same player which lifts burden of learning rules from network. Yet its learning fails to properly converge and current best variation of the model compresses 10 discrete inputs to only 7 continues values while reconstructing only 20% of training data right and playing not better than random. Tried ReLU instead of tanh, adding layers, dividing training data on mini-batches but nothing seems to work. Rest of the code seems fine because using just one hidden layer with 9 neurons leads to 100% reconstruction of training data while not learning anything useful.   
 
+**Sparse autoencoder**: neural network trained to reconstruct game history described by sparse feature - outcome, length of game and binary arrays for empty, cross and nought cells. Such representation allows violating game rules but binary arrays seemed to be better fit for convolutional neural networks. Although several convolutional and deconvolutional layers were succesfully utilized, the latent space is still very large (82 values) and adding fully connected layers break 100% reconstruction of training data. Large latent space means that no good compression of input was reached and predictably neutwork fails to impute game future states, leading to 100% random moves and playing same as dumb player.
+
 ## Results
 
 Results for algorithms playing against dumb player including Saubel's neural network are presented in this table.
