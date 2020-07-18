@@ -62,7 +62,7 @@ class Player:
             if win_move_score > best_score:
                 best_score = win_move_score
                 best_move = move
-            elif draw_move_score > best_score:
+            if draw_move_score > best_score:
                 best_score = draw_move_score
                 best_move = move
 

@@ -1,3 +1,16 @@
+def print_board_state(board_state):
+    state = [board_state[:3], board_state[3:6], board_state[6:]]
+    symbols = [' ', 'X', 'O']
+    separator = ('-------------')
+
+    print(separator)
+    for row in state:
+        line = '| '
+        for cell in row:
+            line += symbols[cell] + ' | '
+        print(line)
+        print(separator)
+
 class Board:
     def __init__(self):
         # each cell on 3x3 board can be taken by one of the players
@@ -6,18 +19,6 @@ class Board:
         # 2 means cell is taken by player with O
         # board always starts empty
         self._state = [[0,0,0], [0,0,0], [0,0,0]]
-
-    def print(self):
-        symbols = [' ', 'X', 'O']
-        separator = ('-------------')
-
-        print(separator)
-        for row in self._state:
-            line = '| '
-            for cell in row:
-               line += symbols[cell] + ' | '
-            print(line)
-            print(separator)
 
     def state(self):
         return self._state[0] + self._state[1] + self._state[2]
