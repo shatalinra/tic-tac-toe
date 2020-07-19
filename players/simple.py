@@ -67,6 +67,8 @@ class Player:
         testing_states = torch.tensor(states[training_data_size:]).float().to(training_device)
         testing_labels = torch.tensor(labels[training_data_size:]).to(training_device)
 
+        # training is very complicated due to conflicting labels and difficult shape of loss function
+        # it took on almost an hour on GTX 970
         loss_fn = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.RMSprop(model.parameters())
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [1500, 5000], 0.1)
