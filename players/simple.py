@@ -3,6 +3,7 @@ import copy
 import torch
 import json
 import game_history
+from torch.optim import lr_scheduler
 
 class QualityEstimator(torch.nn.Module):
     def __init__(self):
@@ -10,13 +11,15 @@ class QualityEstimator(torch.nn.Module):
 
         # there are 8 meaningul line combinations, output would be 8 channels x 3 values
         self.conv1 = torch.nn.Conv1d(1, 8, 9, 9)
-        self.conv1_activation = torch.nn.Tanh()
+        self.conv1_activation = torch.nn.ReLU()
 
-        self.linear1 = torch.nn.Linear(24, 12)
+        self.linear1 = torch.nn.Linear(24, 18)
         self.linear1_activation = torch.nn.Tanh()
-        self.linear2 = torch.nn.Linear(12, 6)
+        self.linear2 = torch.nn.Linear(18, 12)
         self.linear2_activation = torch.nn.Tanh()
-        self.linear3 = torch.nn.Linear(6, 3)
+        self.linear3 = torch.nn.Linear(12, 6)
+        self.linear3_activation = torch.nn.Tanh()
+        self.linear4 = torch.nn.Linear(6, 3)
         
     def forward(self, data):
         x = data.view(1,-1) if data.dim() == 1 else data
@@ -31,6 +34,8 @@ class QualityEstimator(torch.nn.Module):
         x = self.linear2(x)
         x = self.linear2_activation(x)
         x = self.linear3(x)
+        x = self.linear3_activation(x)
+        x = self.linear4(x)
 
         return x
 
@@ -63,9 +68,10 @@ class Player:
         testing_labels = torch.tensor(labels[training_data_size:]).to(training_device)
 
         loss_fn = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.RMSprop(model.parameters(), lr = 0.002)
+        optimizer = torch.optim.RMSprop(model.parameters())
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [1500, 5000], 0.1)
         print("\nTraining using", training_device, "on", training_data_size, "states")
-        for t in range(15000):
+        for t in range(10000):
             # Forward pass: compute predicted y by passing x to the model.
             output_labels = model(training_states)
 
@@ -86,7 +92,9 @@ class Player:
             # parameters
             optimizer.step()
 
-            # Check model perfomance
+            scheduler.step()
+
+            # Print current loss
             if t % 100 == 0:
                 output_labels = model(testing_states)
                 validation_loss = loss_fn(output_labels, testing_labels)
