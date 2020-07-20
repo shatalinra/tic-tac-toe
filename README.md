@@ -22,7 +22,7 @@ Results for algorithms playing against dumb player including Saubel's neural net
 | ------------- | --------------------- | ---------------------- | --------------------- | ---------------------- | ----------------------- | ---------------------- |
 | Dumb          | 57.7%                 | 13%                    | 29.3%                 | 29.3%                  | 13.0%                   | 57.7%                  |
 | Saubel        | 95.0%                 | 3.4%                   | 1.6%                  | 42.7%                  | 53.0%                   | 4.3%                   |
-| Probabilistic | 97.8%                 | 2.2%                   | 0.0%                  | 69.2%                  | 16.7%                   | 14.1%                  |
-| Simple        | 96.4%                 | 3.6%                   | 0.0%                  | 61.3%                  | 19.4%                   | 19.3%                  |
+| Probabilistic | 97.8%                 | 2.2%                   | 0.0%                  | 80.7%                  | 15.5%                   | 3.8%                   |
+| Simple        | 96.4%                 | 3.6%                   | 0.0%                  | 85.9%                  | 11.5%                   | 2.6%                   |
 
-Dumb algorithm is provided for reference. Probabilistic algorithm is great at winning games but have problems forcing a draw while playing second. Simple algorithm follows it but instead of storing statistics for board games it uses more compact model. Saubel's network have lesser chances of winning which can be explained by dense reprsenatation for board state but still forces more draws while playing second.
+Dumb algorithm is provided for reference. Probabilistic algorithm is great at winning games but simple neutwork uses more compact model. Saubel's network have lesser perfomance especially when playing second.
